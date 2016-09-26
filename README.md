@@ -16,5 +16,4 @@ Cataract Eye Glasses | 1 | 5.75
 9V batteries (8-pack) | 1 | 9.99
 SPST sub mini toggle switch | 1 | 3.89
 Gloves/Wristbands | 1 | 4.99
------------- | -------- | ---------------------------------------
-Total | | 53.39
+**Total** | | **53.39**
