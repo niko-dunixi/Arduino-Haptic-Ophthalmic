@@ -4,87 +4,53 @@
 
 // http://www.micropik.com/PDF/HCSR04.pdf
 
-class Sonar {
+class SonarSensor {
     public:
-    Sonar(std::vector<pin_t> triggerPin, std::vector<pin_t> echoPins);
-    std::vector<uint> getCentimeters();
+    SonarSensor(pin_t triggerPin, pin_t echoPins);
+    uint getCM();
 
     private:
-    std::vector<pin_t> m_triggerPins;
-    std::vector<pin_t> m_echoPins;
+    pin_t m_triggerPin;
+    pin_t m_echoPin;
 };
 
-Sonar::Sonar(std::vector<pin_t> triggerPins, std::vector<pin_t> echoPins) : m_triggerPins(triggerPins), m_echoPins(echoPins) {
-    for (uint i = 0; i < m_triggerPins.size(); ++i) {
-        pinMode(m_triggerPins[i], OUTPUT);
-        digitalWriteFast(m_triggerPins[i], LOW);
-    }
-    for (uint i = 0; i < m_echoPins.size(); ++i) {
-        Serial.printf("Setting pin as input: %2d\n", m_echoPins[i]);
-        pinMode(m_echoPins[i], INPUT);
-    }
-    Serial.println("Ready!");
+SonarSensor::SonarSensor(pin_t triggerPin, pin_t echoPin) : m_triggerPin(triggerPin), m_echoPin(echoPin) {
+    Serial.print("Initializing. ");
+    pinMode(m_triggerPin, OUTPUT);
+    digitalWrite(m_triggerPin, LOW);
+    pinMode(m_echoPin, INPUT);
+    Serial.printf("Trigger: %2d, Echo: %2d\n", m_triggerPin, m_echoPin);
 }
 
-std::vector<uint> Sonar::getCentimeters() {
-    // Issue with trying to poll these devices sequentially.
-    // It has to be done in a specific way.
-    // For now it must be done this way, however, I think there
-    // should be a workaround.
-    // http://stackoverflow.com/questions/25823179/driving-two-ultrasonic-sensor-with-arduino#comment40397990_25823179
-
-    std::vector<uint> results;
-    for (uint i = 0; i < m_triggerPins.size(); ++i) {
-        // Start ping
-        digitalWrite(m_triggerPins[i], HIGH);
-        delayMicroseconds(10);
-        digitalWrite(m_triggerPins[i], LOW);
-        // Get result
-        uint raw = pulseIn(m_echoPins[i], HIGH);
-        results.push_back(raw / 29 / 2); // TODO: verify this equation... I lost the link where I originally found it. I don't think it's actually correct.
-        delay(75);
-    }
-    return results;
-
-    // // Serial.println("Sonar::getCentimeters");
-    // // Serial.println("10 micro seconds - strt");
-    // for (uint i = 0; i < m_triggerPins[i]; ++i) {
-    //     digitalWriteFast(m_triggerPins[i], HIGH);
-    // }
-    // delayMicroseconds(10);
-    // for (uint i = 0; i < m_triggerPins[i]; ++i) {
-    //     digitalWriteFast(m_triggerPins[i], LOW);
-    // }
-    // // Serial.println("10 micro seconds - fin");
-
-    // std::vector<uint> results;
-    // for (uint i = 0; i < m_echoPins.size(); ++i) {
-    //     Serial.printf("Polling pin %2d ", m_echoPins[i]);
-    //     uint raw = pulseIn(m_echoPins[i], HIGH);
-    //     Serial.printf(" Raw data: %2d\n", raw);
-    //     results.push_back(raw / 29 / 2);
-    //     delay(25);
-    // }
-    // Serial.println("Returning results");
-    // return results;
+uint SonarSensor::getCM() {
+    // Trigger ping
+    digitalWrite(m_triggerPin, HIGH);
+    delayMicroseconds(10);
+    digitalWrite(m_triggerPin, LOW);
+    // Get response
+    uint raw = pulseIn(m_echoPin, HIGH);
+    return raw / 29 / 2;
 }
 
-Sonar* sonar;
+std::vector<SonarSensor*> sensors;
 
 void setup() {
-    // Serial.begin(115200);
-    Serial.begin(9600);
-    std::vector<pin_t> triggerPins = { D1, D2 };
-    std::vector<pin_t> echoPins = { D5, D6 };
-    sonar = new Sonar(triggerPins, echoPins);
+    Serial.begin(115200);
+    // Serial.begin(9600);
+    sensors.push_back(new SonarSensor(D2, D6));
+    sensors.push_back(new SonarSensor(D1, D5));
     delay(50);
 }
 
+// Issue with trying to poll these devices sequentially.
+// It has to be done in a specific way.
+// For now it must be done this way, however, I think there
+// should be a workaround.
+// http://stackoverflow.com/questions/25823179/driving-two-ultrasonic-sensor-with-arduino#comment40397990_25823179
 void loop() {
-    std::vector<uint> measurements = sonar->getCentimeters();
-    for (uint i = 0; i < measurements.size(); ++i) {
-        Serial.printf("%2d cm ", measurements[i]);
+    for (uint i = 0; i < sensors.size(); ++i) {
+        Serial.printf("%2d cm ", sensors[i]->getCM());
+        delay(75);
     }
-    Serial.printf("\n");
-    delay(100);
+    Serial.println();
 }
