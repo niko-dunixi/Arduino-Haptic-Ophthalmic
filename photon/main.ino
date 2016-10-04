@@ -41,7 +41,7 @@ std::vector<uint> Sonar::getCentimeters() {
         digitalWrite(m_triggerPins[i], LOW);
         // Get result
         uint raw = pulseIn(m_echoPins[i], HIGH);
-        results.push_back(raw / 29 / 2);
+        results.push_back(raw / 29 / 2); // TODO: verify this equation... I lost the link where I originally found it. I don't think it's actually correct.
         delay(75);
     }
     return results;
