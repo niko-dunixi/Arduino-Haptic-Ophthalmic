@@ -13,16 +13,16 @@
 // http://www.micropik.com/PDF/HCSR04.pdf
 
 // TODO: Create a vector of tuples
-std::vector<SonarSensor*> sensors;
-std::vector<RollingAverage> avgs;
+std::vector<SonarSensor> sensors;
+// std::vector<RollingAverage> avgs;
 std::vector<HapticResponse> resps;
 
 void setup() {
     // Serial.begin(115200);
     Serial.begin(9600);
     Serial.println("Setup::start");
-    sensors.push_back(new SonarSensor(D1, D5));
-    sensors.push_back(new SonarSensor(D2, D6));
+    sensors.emplace_back(D1, D5);
+    sensors.emplace_back(D2, D6);
     // avgs.emplace_back(25);
     // avgs.emplace_back(25);
     resps.emplace_back(A4, 150);
@@ -37,12 +37,12 @@ void setup() {
 // should be a workaround.
 // http://stackoverflow.com/questions/25823179/driving-two-ultrasonic-sensor-with-arduino#comment40397990_25823179
 
-int loopCount = 0;
+uint loopCount = 0;
 
 void loop() {
   int values[2];
   for (uint i = 0; i < sensors.size(); ++i) {
-    uint cm = sensors[i]->getCM();
+    uint cm = sensors[i].getCM();
     values[i] = cm;
     Serial.printf("%2d cm ", cm);
     // avgs[i].addValue(cm);
