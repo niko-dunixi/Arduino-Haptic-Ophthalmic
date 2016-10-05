@@ -1,4 +1,5 @@
 #include "RollingAverage.h"
+
 RollingAverage::RollingAverage(uint bufferSize) : m_bufferSize(bufferSize), m_total(0) {
     Serial.printf("Creating rolling average with: %2d / %2d\n", m_total, m_bufferSize);
 }
@@ -20,4 +21,3 @@ bool RollingAverage::hasAverage() {
 uint RollingAverage::getAverage() {
     return m_total / m_bufferSize;
 }
-Ready.
