@@ -1,6 +1,3 @@
-// This #include statement was automatically added by the Particle IDE.
-#include "HapticResponse.h"
-
 #include "application.h"
 #include <algorithm>
 #include <vector>
