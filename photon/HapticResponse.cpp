@@ -2,7 +2,7 @@
 
 HapticResponse::HapticResponse(pin_t pin, uint maxValue) : m_pin(pin), m_maxValue(maxValue) {
   pinMode(m_pin, OUTPUT);
-  Serial.printf("Using pin %2d and capping at %2d", m_pin, m_maxValue);
+  Serial.printf("Using pin %2d and capping at %2d\n", m_pin, m_maxValue);
 }
 
 void HapticResponse::buzz(uint value) {
