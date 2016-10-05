@@ -18,8 +18,8 @@ std::vector<RollingAverage> avgs;
 std::vector<HapticResponse> resps;
 
 void setup() {
-    Serial.begin(115200);
-    // Serial.begin(9600);
+    // Serial.begin(115200);
+    Serial.begin(9600);
     Serial.println("Setup::start");
     sensors.push_back(new SonarSensor(D1, D5));
     sensors.push_back(new SonarSensor(D2, D6));
@@ -53,7 +53,7 @@ void loop() {
     delay(75);
   }
   Serial.println();
-  if (loopCount % 1 == 0) {
+  if (loopCount % 3 == 0) {
     for (uint i = 0; i < resps.size(); ++i) {
       resps[i].buzz(values[i]);
     }
