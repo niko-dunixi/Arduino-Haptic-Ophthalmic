@@ -3,6 +3,7 @@
 RollingAverage::RollingAverage(uint bufferSize) : m_bufferSize(bufferSize), m_total(0) {
     Serial.printf("Creating rolling average with: %2d / %2d\n", m_total, m_bufferSize);
 }
+
 void RollingAverage::addValue(uint value) {
     // NOTE: this should be fine as an "if" instead of a
     // "while", but there is a memory leak in here somewhere
@@ -15,9 +16,11 @@ void RollingAverage::addValue(uint value) {
     m_total += value;
     m_values.push_back(value);
 }
+
 bool RollingAverage::hasAverage() {
     return m_values.size() >= m_bufferSize;
 }
+
 uint RollingAverage::getAverage() {
     return m_total / m_bufferSize;
 }
