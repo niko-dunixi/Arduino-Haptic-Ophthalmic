@@ -46,9 +46,9 @@ void loop()
   // convert the time into a distance
   cm = (duration/2) / 29.1;
   
-  //Serial.print(cm);
-  //Serial.print("cm");
-  //Serial.println();
+  Serial.print(cm);
+  Serial.print("cm");
+  Serial.println();
 
   if (cm < 100){
     digitalWrite(led1,HIGH);
