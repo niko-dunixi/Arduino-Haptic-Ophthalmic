@@ -11,6 +11,7 @@ int sensorMotorCombo[3][3]={
   {8, 7, 6}     // Trigger pin for sensor2 = 8, echo pin for sensor2 = 7, motor for sensor2 = 6
 };
 
+int arrSize = sizeof(sensorMotorCombo)/sizeof(int); //cluge because you can't do array.length in c
 
 //data manipulation variables
 long duration, cm;
@@ -26,15 +27,24 @@ void setup() {
   pinMode(sensorMotorCombo[0][0], OUTPUT); //pin 11 (trigger pin) is output
   pinMode(sensorMotorCombo[0][1], INPUT); //pin 12 (echo pin) is input
 
+  pinMode(sensorMotorCombo[1][0], OUTPUT); //pin 10 (trigger pin) is output
+  pinMode(sensorMotorCombo[1][1], INPUT); //pin 9 (echo pin) is input  
+
+  pinMode(sensorMotorCombo[2][0], OUTPUT); //pin 8 (trigger pin) is output
+  pinMode(sensorMotorCombo[2][1], INPUT); //pin 7 (echo pin) is input  
+
 }
  
 void loop()
 {
-  cm = getDistanceFromSensor(0); //get distance information from sensor/motor combo 0
-
-  writeMotor(cm, sensorMotorCombo[0][2]); //buzz motor 0 based on cm
+  for (int i = 0; i<arrSize; i++){ //arrSize is the size of the array calculated above. It is equivolent of array.length
   
-  delay(100);
+    cm = getDistanceFromSensor(i); //get distance information from sensor/motor combo 0
+
+    writeMotor(cm, sensorMotorCombo[i][2]); //buzz motor based on cm
+  
+    delay(100);
+  }
     
 }//end of loop
 
