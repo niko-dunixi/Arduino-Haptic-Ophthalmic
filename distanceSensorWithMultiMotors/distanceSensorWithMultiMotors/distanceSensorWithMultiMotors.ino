@@ -37,7 +37,7 @@ void setup() {
  
 void loop()
 {
-  for (int i = 0; i<arrSize; i++){ //arrSize is the size of the array calculated above. It is equivolent of array.length
+  for (int i = 0; i<3; i++){ //arrSize is the size of the array calculated above. It is equivolent of array.length
   
     cm = getDistanceFromSensor(i); //get distance information from sensor/motor combo 0
 

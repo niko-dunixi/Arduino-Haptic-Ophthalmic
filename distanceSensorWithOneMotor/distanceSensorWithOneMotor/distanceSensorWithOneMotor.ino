@@ -6,9 +6,10 @@
 //the nano can analogWrite to pins 3,5,6,9,10,11
 //set up distance sensor pins
 int sensorMotorCombo[3][3]={
-  {11,  12, 3},  // Trigger pin for sensor0 = 11, echo pin for sensor0 = 12, motor for sensor0 = 3
-  {10, 9, 5},    // Trigger pin for sensor1 = 10, echo pin for sensor1 = 9, motor for sensor1 = 5
-  {8, 7, 6}     // Trigger pin for sensor2 = 8, echo pin for sensor2 = 7, motor for sensor2 = 6
+   
+  //{11,  12, 3},  // Trigger pin for sensor0 = 11, echo pin for sensor0 = 12, motor for sensor0 = 3
+  //{10,  9, 5},
+  {8, 7, 6}
 };
 
 
@@ -35,6 +36,9 @@ void loop()
   writeMotor(cm, sensorMotorCombo[0][2]); //buzz motor 0 based on cm
   
   delay(100);
+
+  //Serial.print("End of loop");
+  //Serial.println();
     
 }//end of loop
 
