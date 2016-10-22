@@ -87,17 +87,23 @@ void loop() {
   
   if (cm1 < 10) {
     digitalWrite(motor1, HIGH);
+    Serial.print("motor1 is written");
+    Serial.println();
   }
 
   if (cm2 < 10) {
-    digitalWrite(motor1, HIGH);
+    digitalWrite(motor2, HIGH);
+    Serial.print("motor2 is written");
+    Serial.println();
   }
 
   if (cm3 < 10) {
-    digitalWrite(motor1, HIGH);
+    digitalWrite(motor3, HIGH);
+    Serial.print("motor3 is written");
+    Serial.println();
   }
 
-  delay(250);
+  //delay(250);
   
   digitalWrite(motor1, LOW);
   digitalWrite(motor2, LOW);
