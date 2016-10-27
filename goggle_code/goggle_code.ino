@@ -57,13 +57,11 @@ void setup() {
     pingTimer[i] = pingTimer[i - 1] + PING_INTERVAL;
 
   // Define motor pins
-//  pinMode (motorPin[0], OUTPUT);
-//  pinMode (motorPin[1], OUTPUT);
-//  pinMode (motorPin[2], OUTPUT);
-
   for (int i = 0; i < sizeof(motorPin); i++) {
     pinMode (motorPin[i], OUTPUT);
   }
+
+  
     
 //  for(int i = 0; i < node_count; ++i) {
 //    //pinMode(nodes[i].trigger, OUTPUT);
