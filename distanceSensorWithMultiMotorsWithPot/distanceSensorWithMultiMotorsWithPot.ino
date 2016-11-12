@@ -15,88 +15,97 @@ int arrSize = sizeof(sensorMotorCombo)/sizeof(int); //cluge because you can't do
 
 //data manipulation variables
 long duration, cm;
-int farthestDistance = 25; //this is in cm - we will use this distance to map the values for analogWrite
-int closestDistance = 5; //this is in cm - this is the closest we want to read from the sensor
+long distances[3];
+int MAX_DISTANCE = 35; //this is in cm - we will use this distance to map the values for analogWrite
+int MIN_DISTANCE = 10; //this is in cm - this is the closest we want to read from the sensor
+unsigned long NEXT_TIME = millis();
 int motorSpeed = 0; // variable to hold map function data
-double pot = 1; // 
- 
+//double pot = 1; 
+
+int MAX_SPEED = 200;
+
 void setup() {
   //Serial Port begin
-//  Serial.begin (9600);
+  Serial.begin(9600);
   
   //Define inputs and outputs
   pinMode(sensorMotorCombo[0][0], OUTPUT); //pin 11 (trigger pin) is output
   pinMode(sensorMotorCombo[0][1], INPUT); //pin 12 (echo pin) is input
+  pinMode(sensorMotorCombo[0][2], OUTPUT); //pin 11 (trigger pin) is output
 
   pinMode(sensorMotorCombo[1][0], OUTPUT); //pin 10 (trigger pin) is output
   pinMode(sensorMotorCombo[1][1], INPUT); //pin 9 (echo pin) is input  
+  pinMode(sensorMotorCombo[1][2], OUTPUT); //pin 11 (trigger pin) is output
 
   pinMode(sensorMotorCombo[2][0], OUTPUT); //pin 8 (trigger pin) is output
   pinMode(sensorMotorCombo[2][1], INPUT); //pin 7 (echo pin) is input  
+  pinMode(sensorMotorCombo[2][2], OUTPUT); //pin 11 (trigger pin) is output
 
 }
  
-void loop()
-{
-    int sensorValue = analogRead(A7);
-
-  //  pot = map(sensorValue, 0, 1024, 0, 1.0);
-    Serial.print("Pot = ");
-    Serial.println(sensorValue);
-
-  for (int i = 0; i<arrSize; i++){ //arrSize is the size of the array calculated above. It is equivolent of array.length
-  
-    cm = getDistanceFromSensor(i); //get distance information from sensor/motor combo 0
-
-    writeMotor(cm, sensorMotorCombo[i][2]); //buzz motor based on cm
-  
-    delay(10);
+void loop() {
+  if (millis() >= NEXT_TIME) {
+     for(int i = 0; i < 3; i++) {
+  //    resetMotor(sensorMotorCombo[i][2]);  
+    }
+    for (int i = 0; i < 3; i++) {
+      int triggerPin = sensorMotorCombo[i][0];
+      int echoPin = sensorMotorCombo[i][1];
+      distances[i] = readSensor(triggerPin, echoPin);
+  //    if (i == 2){
+  //      Serial.print("Sensor ");
+  //      Serial.print(i);
+  //      Serial.print(" = ");
+  //      Serial.println(distances[i]);
+  //    }
+    }
+    double potValue = readPot();
+  //  Serial.println(potValue);
+    for (int i = 0; i < 3; i++) {
+      int strength = (map(distances[i], MIN_DISTANCE, MAX_DISTANCE, 200, 0) * potValue); 
+      writeMotor(sensorMotorCombo[i][2], strength);
+//      if (i == 0) {
+//        Serial.print("Motor ");
+//        Serial.print(i);
+//        Serial.print(" : ");
+//        Serial.print(distances[i]);
+//        Serial.print(", ");
+//        Serial.println(strength);
+//      }
+    }
+    NEXT_TIME = millis() + 60;
   }
-    
 }//end of loop
 
-long getDistanceFromSensor(int sensorNumber){
-  // The sensor is triggered by a HIGH pulse of 10 or more microseconds.
-  // Give a short LOW pulse beforehand to ensure a clean HIGH pulse:
-  digitalWrite(sensorMotorCombo[sensorNumber][0], LOW);
-  delayMicroseconds(5);
-  digitalWrite(sensorMotorCombo[sensorNumber][0], HIGH);
-  delayMicroseconds(10);
-  digitalWrite(sensorMotorCombo[sensorNumber][0], LOW);
- 
-  // Read the signal from the sensor: a HIGH pulse whose
-  // duration is the time (in microseconds) from the sending
-  // of the ping to the reception of its echo off of an object.
-  pinMode(sensorMotorCombo[sensorNumber][1], INPUT);
-  duration = pulseIn(sensorMotorCombo[sensorNumber][1], HIGH);
- 
-  // convert the time into a distance
-  long tempCm = (duration/2) / 29.1;
-  return tempCm;
+/***
+ * Reads potentiometer and returns percentage
+ */
+double readPot() {
+  // Read the value from the pin, it will be between 0 and 1024, we then convert this to a percentage from this range.
+  // This is done with map and then a double divide/cast.
+  int pinValue = analogRead(A7);
+  return map(pinValue, 0, 1024, 0, 100) / (double) 100;
 }
 
-
-void writeMotor(long dist, int motorToWrite){
-
-    //vibrate the motor based on dist (value is in cm)
-    //if statement keeps motor from vibrating if sensor senses beyond farthestDistance  
-  if (dist < farthestDistance){
-      motorSpeed = map(dist, closestDistance, farthestDistance, 200, 10);
-      motorSpeed = motorSpeed*pot;
-    
-//      Serial.print("MotorPin: ");
-//      Serial.print(motorToWrite);
-//      Serial.print(" Distance: ");
-//      Serial.print(dist);
-//      Serial.print(" cm, ");
-      Serial.print(" Speed: ");
-      Serial.print(motorSpeed);
-      Serial.println();
-
-      analogWrite(motorToWrite, motorSpeed); //send the instructions to the motor
-  }else{
-    analogWrite(motorToWrite, 0);    //turn the motor off
+long readSensor(int triggerPin, int echoPin) {
+  digitalWrite(triggerPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(triggerPin, LOW);
+  long duration = pulseIn(echoPin, HIGH);
+  long cm = duration / 2 / 29.1;
+  if (cm < MIN_DISTANCE) {
+    return MIN_DISTANCE;
+  } else if (cm > MAX_DISTANCE) {
+    return MAX_DISTANCE;
   }
-  
-}//end of writeMotor function
+  return cm;
+}
+
+void resetMotor(int motorPin) {
+  analogWrite(motorPin, 0);
+}
+
+void writeMotor(int motorPin, int vibrateStr) {
+  analogWrite(motorPin, vibrateStr);
+}
 
