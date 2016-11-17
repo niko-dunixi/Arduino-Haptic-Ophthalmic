@@ -1,102 +1,93 @@
-#include <NewPing.h>
+//red wire connects 5v on Nano to VCC on SR04
+//brown wire connects SR04 to Ground
+//Trigger pin of the SR04 sensor - green Jumper
+//Echo pin of the SR04 sensor- yellow Jumper
 
-/*
- * Code isn't glass, PLEASE EDIT THIS FILE!! :D
- *  (We've got a lot of example/test code floating around,
- *  but the norm is to have a single code-base to edit so
- *  let's start centralizing our work)
- */
-
-#define SONAR_NUM       3           // Number of sensors
-#define MAX_DISTANCE  200           // Max distance in cm
-#define MIN_DISTANCE   10           // Min distance in cm
-#define PING_INTERVAL  33           // Millisecond between pings. (3*33 = 99ms per ping cycle)
-
-unsigned long pingTimer[SONAR_NUM]; // When each pings
-unsigned int cm[SONAR_NUM];         // Store ping distances
-uint8_t currentSensor = 0;          // Which sensor is active
-int motorSpeed = 0;
-int motorPin[3] = {
-  3,                                // Motor for sonar0
-  5,                                // Motor for sensor1
-  6                                 // Motor for sensor2
+//the nano can analogWrite to pins 3,5,6,9,10,11
+//set up distance sensor pins
+int sensorMotorCombo[3][3]={
+  {11,  12, 3},  // Trigger pin for sensor0 = 11, echo pin for sensor0 = 12, motor for sensor0 = 3
+  {10, 9, 5},    // Trigger pin for sensor1 = 10, echo pin for sensor1 = 9, motor for sensor1 = 5
+  {8, 7, 6}     // Trigger pin for sensor2 = 8, echo pin for sensor2 = 7, motor for sensor2 = 6
 };
 
-NewPing sonar[SONAR_NUM] = {        // Array of sensors
-  NewPing(11, 12, MAX_DISTANCE),
-  NewPing(10, 9, MAX_DISTANCE),
-  NewPing(8, 7, MAX_DISTANCE)
-};
+int arrSize = sizeof(sensorMotorCombo)/sizeof(int); //cluge because you can't do array.length in c
+
+//data manipulation variables
+long duration, cm;
+long distances[3];
+int MAX_DISTANCE = 35; //this is in cm - we will use this distance to map the values for analogWrite
+int MIN_DISTANCE = 10; //this is in cm - this is the closest we want to read from the sensor
+unsigned long NEXT_TIME = millis();
+int motorSpeed = 0; // variable to hold map function data
+
+int MAX_SPEED = 200;
 
 void setup() {
-  // Serial Port begin
-  Serial.begin (9600);
-  pingTimer[0] = millis() + 75; // First ping start in ms.
-  for (uint8_t i = 1; i < SONAR_NUM; i++) 
-    pingTimer[i] = pingTimer[i - 1] + PING_INTERVAL; 
+  //Serial Port begin
+  Serial.begin(9600);
 
-  // Define motor pins
-  for (int i = 0; i < sizeof(motorPin); i++) {
-    pinMode (motorPin[i], OUTPUT);
-  }
-}// end of setup
+  //Define inputs and outputs
+  pinMode(sensorMotorCombo[0][0], OUTPUT); //pin 11 (trigger pin) is output
+  pinMode(sensorMotorCombo[0][1], INPUT); //pin 12 (echo pin) is input
+  pinMode(sensorMotorCombo[0][2], OUTPUT); //pin 11 (trigger pin) is output
 
-void loop() {
-  getSensorValues();
-  writeMotor();
-}//end of loop()
+  pinMode(sensorMotorCombo[1][0], OUTPUT); //pin 10 (trigger pin) is output
+  pinMode(sensorMotorCombo[1][1], INPUT); //pin 9 (echo pin) is input
+  pinMode(sensorMotorCombo[1][2], OUTPUT); //pin 11 (trigger pin) is output
 
-void echoCheck() { // If ping echo, set distance to array.
-  if (sonar[currentSensor].check_timer())
-    cm[currentSensor] = sonar[currentSensor].ping_result / US_ROUNDTRIP_CM;
-}// end of echoCheck()
- 
-void oneSensorCycle() { // Do something with the results.
-  for (uint8_t i = 0; i < SONAR_NUM; i++) {
-    Serial.print(i);
-    Serial.print("=");
-    Serial.print(cm[i]);
-    Serial.print("cm ");
-  }
-  Serial.println();
-}// end of oneSensorCycle()
+  pinMode(sensorMotorCombo[2][0], OUTPUT); //pin 8 (trigger pin) is output
+  pinMode(sensorMotorCombo[2][1], INPUT); //pin 7 (echo pin) is input
+  pinMode(sensorMotorCombo[2][2], OUTPUT); //pin 11 (trigger pin) is output
 
-//void writeMotor(long dist, int motorToWrite){
-//
-//  if (dist < MAX_DISTANCE) {
-//    motorSpeed = map(dist, MIN_DISTANCE, MAX_DISTANCE, 200, 10);
-//
-//    analogWrite(motorToWrite, motorSpeed);
-//  }else{
-//    analogWrite(motorToWrite, 0);
-//  }
-//}// end of writeMotor()
-
-void writeMotor() {
-  for (int i = 0; i  < 3; i++){
-    analogWrite(motorPin[i], 0);
-  }
-  delay(40);
-  for (int i = 0; i < 3; i++) {
-      motorSpeed = map(cm[i], MIN_DISTANCE, MAX_DISTANCE, 200, 10);
-
-      analogWrite(motorPin[i], motorSpeed);
-  }
-  
 }
 
-void getSensorValues() {
-    for (uint8_t i = 0; i < SONAR_NUM; i++) {
-    if (millis() >= pingTimer[i]) {
-      pingTimer[i] += PING_INTERVAL * SONAR_NUM;
-//      if (i == 0 && currentSensor == SONAR_NUM - 1)
-//        oneSensorCycle(); // Do something with results.
-      sonar[i].timer_stop();
-      cm[i] = 0;
-      sonar[i].ping_timer(echoCheck);
-    }
+void loop() {
+  if (millis() < NEXT_TIME) {
+    return;
   }
-}// end of getSensorValues()
 
+  for (int i = 0; i < 3; i++) {
+    int triggerPin = sensorMotorCombo[i][0];
+    int echoPin = sensorMotorCombo[i][1];
+    distances[i] = readSensor(triggerPin, echoPin);
+  }
+  double potValue = readPot();
+  for (int i = 0; i < 3; i++) {
+    int strength = (map(distances[i], MIN_DISTANCE, MAX_DISTANCE, 200, 0) * potValue);
+    writeMotor(sensorMotorCombo[i][2], strength);
+  }
+  NEXT_TIME = millis() + 60;
+}//end of loop
 
+/***
+ * Reads potentiometer and returns percentage
+ */
+double readPot() {
+  // Read the value from the pin, it will be between 0 and 1024, we then convert this to a percentage from this range.
+  // This is done with map and then a double divide/cast.
+  int pinValue = analogRead(A7);
+  return map(pinValue, 0, 1024, 0, 100) / (double) 100;
+}
 
+long readSensor(int triggerPin, int echoPin) {
+  digitalWrite(triggerPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(triggerPin, LOW);
+  long duration = pulseIn(echoPin, HIGH);
+  long cm = duration / 2 / 29.1;
+  if (cm < MIN_DISTANCE) {
+    return MIN_DISTANCE;
+  } else if (cm > MAX_DISTANCE) {
+    return MAX_DISTANCE;
+  }
+  return cm;
+}
+
+void resetMotor(int motorPin) {
+  analogWrite(motorPin, 0);
+}
+
+void writeMotor(int motorPin, int vibrateStr) {
+  analogWrite(motorPin, vibrateStr);
+}
