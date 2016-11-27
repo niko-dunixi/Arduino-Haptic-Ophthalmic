@@ -11,17 +11,12 @@ int sensorMotorCombo[3][3]={
   {8, 7, 6}     // Trigger pin for sensor2 = 8, echo pin for sensor2 = 7, motor for sensor2 = 6
 };
 
-int arrSize = sizeof(sensorMotorCombo)/sizeof(int); //cluge because you can't do array.length in c
-
 //data manipulation variables
-long duration, cm;
 long distances[3];
-int MAX_DISTANCE = 35; //this is in cm - we will use this distance to map the values for analogWrite
-int MIN_DISTANCE = 10; //this is in cm - this is the closest we want to read from the sensor
+const int MAX_DISTANCE = 35; //this is in cm - we will use this distance to map the values for analogWrite
+const int MIN_DISTANCE = 10; //this is in cm - this is the closest we want to read from the sensor
+const int MAX_SPEED = 200;
 unsigned long NEXT_TIME = millis();
-int motorSpeed = 0; // variable to hold map function data
-
-int MAX_SPEED = 200;
 
 void setup() {
   //Serial Port begin
@@ -43,20 +38,27 @@ void setup() {
 }
 
 void loop() {
+  // If it is too soon, we will not run the loop again.
   if (millis() < NEXT_TIME) {
     return;
   }
-
+  // Read values from all sensors.
+  // Store them into array
   for (int i = 0; i < 3; i++) {
     int triggerPin = sensorMotorCombo[i][0];
     int echoPin = sensorMotorCombo[i][1];
     distances[i] = readSensor(triggerPin, echoPin);
   }
+  // Read value from potentiometer
   double potValue = readPot();
+  // Take distances, calculate how much they should be vibrating with relation
+  // to distance. Multiply that by the potentiometer value (which is between 0 and 1)
+  // as a strength multiplier.
   for (int i = 0; i < 3; i++) {
     int strength = (map(distances[i], MIN_DISTANCE, MAX_DISTANCE, 200, 0) * potValue);
     writeMotor(sensorMotorCombo[i][2], strength);
   }
+  // Set the next time the loop will be allowed to execute again.
   NEXT_TIME = millis() + 60;
 }//end of loop
 
@@ -70,6 +72,9 @@ double readPot() {
   return map(pinValue, 0, 1024, 0, 100) / (double) 100;
 }
 
+/***
+ * Reads a value from a sensor by taking a trigger and echo pin.
+ */
 long readSensor(int triggerPin, int echoPin) {
   digitalWrite(triggerPin, HIGH);
   delayMicroseconds(10);
@@ -84,10 +89,9 @@ long readSensor(int triggerPin, int echoPin) {
   return cm;
 }
 
-void resetMotor(int motorPin) {
-  analogWrite(motorPin, 0);
-}
-
+/***
+ * Writes a value to our motor, this value will be how much it vibrates.
+ */
 void writeMotor(int motorPin, int vibrateStr) {
   analogWrite(motorPin, vibrateStr);
 }
